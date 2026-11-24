@@ -58,6 +58,19 @@ export class Context {
     public getReference(): ts.Node | undefined {
         return this.reference;
     }
+
+    /**
+     * Snapshot of the arguments and parameters visible to the current parse.
+     * Callers that defer work (function return types) must not keep using the
+     * live context, which later parses mutate.
+     */
+    public clone(): Context {
+        const cloned = new Context(this.reference);
+        cloned.arguments = this.arguments.slice();
+        cloned.parameters = this.parameters.slice();
+        cloned.defaultArgument = new Map(this.defaultArgument);
+        return cloned;
+    }
 }
 
 export interface NodeParser {

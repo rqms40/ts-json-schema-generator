@@ -1,0 +1,44 @@
+{
+  "$ref": "#/definitions/Library",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "BookData": {
+      "additionalProperties": false,
+      "properties": {
+        "pages": {
+          "type": "number"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "pages"
+      ],
+      "type": "object"
+    },
+    "Library": {
+      "additionalProperties": false,
+      "properties": {
+        "books": {
+          "items": {
+            "$ref": "#/definitions/TypeOf%3CZodObject%3CBookShape%2C%22strip%22%2CZodTypeAny%2CBookData%2CBookData%3E%3E"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "books"
+      ],
+      "type": "object"
+    },
+    "TypeOf<ZodObject<BookShape,\"strip\",ZodTypeAny,BookData,BookData>>": {
+      "$ref": "#/definitions/BookData"
+    }
+  }
+}

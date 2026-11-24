@@ -36,11 +36,9 @@ export class FunctionNodeParser implements SubNodeParser {
         }
 
         const name = getTypeName(node);
-        const func = new FunctionType(
-            node,
-            getNamedArguments(this.childNodeParser, node, context),
-            getReturnType(this.childNodeParser, node, context),
-        );
+        const namedArguments = getNamedArguments(this.childNodeParser, node, context);
+        const { returnType, resolveReturnType } = getFunctionReturn(this.childNodeParser, node, context);
+        const func = new FunctionType(node, namedArguments, returnType, resolveReturnType);
 
         return name ? new DefinitionType(name, func) : func;
     }
@@ -81,6 +79,35 @@ export function getNamedArguments(
         }),
         false,
     );
+}
+
+/**
+ * Return type stored on a {@link FunctionType}.
+ *
+ * Type predicates are runtime booleans or void, so they are parsed immediately.
+ * Every other annotated return type is deferred. Parsing it up front recurses
+ * without bound for zod 3 `ZodObject`: function-typed members such as `augment`
+ * return a new generic instantiation of the same class, and each instantiation
+ * has a distinct circular-reference key.
+ */
+export function getFunctionReturn(
+    childNodeParser: NodeParser,
+    node:
+        | ts.FunctionTypeNode
+        | ts.FunctionExpression
+        | ts.FunctionDeclaration
+        | ts.ArrowFunction
+        | ts.ConstructorTypeNode,
+    context: Context,
+): { returnType?: BaseType; resolveReturnType?: () => BaseType | undefined } {
+    if (!node.type || ts.isTypePredicateNode(node.type)) {
+        return { returnType: getReturnType(childNodeParser, node, context) };
+    }
+
+    const captured = context.clone();
+    return {
+        resolveReturnType: () => getReturnType(childNodeParser, node, captured),
+    };
 }
 
 export function getReturnType(
